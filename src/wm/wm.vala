@@ -744,14 +744,10 @@ public class BudgieWM : Meta.Plugin
     void prepare_animation(Meta.WindowActor actor, Meta.Rectangle old_frame_rect, Meta.Rectangle old_buffer_rect)
     {
         message("Preparing animation");
-        AnimationInfo? info = actor.get_data("_animation_info");
-        if (info != null) {
-            actor.set_data("_animation_info", null);
-            size_change_completed(actor);
-        }
 
         Clutter.Actor? actor_clone = get_window_actor_snapshot(actor, old_frame_rect);
         if (actor_clone == null) {
+            message("Couldn't get actor clone");
             size_change_completed(actor);
             return;
         }
@@ -760,7 +756,7 @@ public class BudgieWM : Meta.Plugin
 
         clear_animation_info(actor);
 
-        info = new AnimationInfo();
+        AnimationInfo info = new AnimationInfo();
         info.actor_clone = actor_clone;
         info.old_rect = old_frame_rect;
 
@@ -836,6 +832,7 @@ public class BudgieWM : Meta.Plugin
 
     public Clutter.Actor? get_window_actor_snapshot(Meta.WindowActor actor, Meta.Rectangle frame_rect)
     {
+        message("Getting actor clone");
         Meta.ShapedTexture texture = actor.get_texture() as Meta.ShapedTexture;
 
         if (texture == null) {
