@@ -605,8 +605,9 @@ public class BudgieWM : Meta.Plugin
                 unminimize_completed(actor);
                 break;
             case AnimationState.SIZE_CHANGE:
+                message("Finalizing the animation");
                 actor.set("pivot-point", PV_NORM, "opacity", 255U, "scale-x", 1.0, "scale-y", 1.0,
-                          "translation_x", 0, "translation_y", 0);
+                          "translation_x", 0.0, "translation_y", 0.0);
                 size_change_completed(actor);
                 break;
             default:
@@ -742,6 +743,7 @@ public class BudgieWM : Meta.Plugin
 
     void prepare_animation(Meta.WindowActor actor, Meta.Rectangle old_frame_rect, Meta.Rectangle old_buffer_rect)
     {
+        message("Preparing animation");
         AnimationInfo? info = actor.get_data("_animation_info");
         if (info != null) {
             actor.set_data("_animation_info", null);
@@ -756,10 +758,7 @@ public class BudgieWM : Meta.Plugin
         actor_clone.set_position(old_frame_rect.x, old_frame_rect.y);
         actor_clone.set_size(old_frame_rect.width, old_frame_rect.height);
 
-        if (clear_animation_info(actor)) {
-            size_change_completed(actor);
-            return;
-        }
+        clear_animation_info(actor);
 
         info = new AnimationInfo();
         info.actor_clone = actor_clone;
@@ -768,18 +767,18 @@ public class BudgieWM : Meta.Plugin
         actor.set_data("_animation_info", info);
     }
 
-    private bool clear_animation_info(Clutter.Actor? actor) {
+    private void clear_animation_info(Clutter.Actor? actor) {
+        message("Clearing previous animation info");
         AnimationInfo? info = actor.get_data("_animation_info");
         if (info != null) {
             info.actor_clone.destroy();
             actor.set_data("_animation_info", null);
-            return true;
         }
-        return false;
     }
 
     void animate_size_change_done(Clutter.Actor? actor)
     {
+        message("Size change animation done");
         SignalHandler.disconnect_by_func(actor, (void*)animate_size_change_done, this);
         clear_animation_info(actor);
         finalize_animations(actor as Meta.WindowActor);
@@ -787,9 +786,11 @@ public class BudgieWM : Meta.Plugin
 
     public void animate_size_change(Meta.WindowActor actor)
     {
+        message("Animating size change");
         AnimationInfo? info = actor.get_data("_animation_info");
 
         if (info == null) {
+            message("Info was null");
             size_change_completed(actor);
             return;
         }
