@@ -48,7 +48,8 @@ public enum AnimationState {
     MAP         = 1 << 0,
     MINIMIZE    = 1 << 1,
     UNMINIMIZE  = 1 << 2,
-    DESTROY     = 1 << 3
+    DESTROY     = 1 << 3,
+    SIZE_CHANGE = 1 << 4
 }
 
 public class ScreenTilePreview : Clutter.Actor
@@ -603,6 +604,11 @@ public class BudgieWM : Meta.Plugin
                 actor.set("pivot-point", PV_NORM, "opacity", 255U, "scale-x", 1.0, "scale-y", 1.0);
                 unminimize_completed(actor);
                 break;
+            case AnimationState.SIZE_CHANGE:
+                actor.set("pivot-point", PV_NORM, "opacity", 255U, "scale-x", 1.0, "scale-y", 1.0,
+                          "translation_x", 0, "translation_y", 0);
+                size_change_completed(actor);
+                break;
             default:
                 break;
         }
@@ -775,12 +781,8 @@ public class BudgieWM : Meta.Plugin
     void animate_size_change_done(Clutter.Actor? actor)
     {
         SignalHandler.disconnect_by_func(actor, (void*)animate_size_change_done, this);
-        actor.scale_x = 1.0f;
-        actor.scale_y = 1.0f;
-        actor.translation_x = 0;
-        actor.translation_y = 0;
-        actor.remove_all_transitions();
         clear_animation_info(actor);
+        finalize_animations(actor as Meta.WindowActor);
     }
 
     public void animate_size_change(Meta.WindowActor actor)
@@ -806,6 +808,8 @@ public class BudgieWM : Meta.Plugin
         double scale_x = (double)target_rect.width / source_rect.width;
         double scale_y = (double)target_rect.height / source_rect.height;
 
+        finalize_animations(actor);
+
         actor_clone.save_easing_state ();
         actor_clone.set_easing_mode(Clutter.AnimationMode.EASE_IN_OUT_QUAD);
         actor_clone.set_easing_duration(duration);
@@ -826,7 +830,7 @@ public class BudgieWM : Meta.Plugin
         actor.restore_easing_state();
         actor.transitions_completed.connect(animate_size_change_done);
 
-        size_change_completed(actor);
+        state_map.insert(actor, AnimationState.SIZE_CHANGE);
     }
 
     public Clutter.Actor? get_window_actor_snapshot(Meta.WindowActor actor, Meta.Rectangle frame_rect)
