@@ -833,11 +833,15 @@ public class BudgieWM : Meta.Plugin
     public Clutter.Actor? get_window_actor_snapshot(Meta.WindowActor actor, Meta.Rectangle frame_rect)
     {
         message("Getting actor clone");
+        message("Getting texture");
         Meta.ShapedTexture texture = actor.get_texture() as Meta.ShapedTexture;
 
         if (texture == null) {
+            message("Texture was null");
             return null;
         }
+
+        message("Got texture");
 
         Cairo.RectangleInt clip = Cairo.RectangleInt();
 
@@ -846,23 +850,34 @@ public class BudgieWM : Meta.Plugin
         clip.width = frame_rect.width;
         clip.height = frame_rect.height;
 
+        message("Getting surface");
         var surface = texture.get_image(clip);
 
         if (surface == null) {
+            message("Surface was null");
             return null;
         }
 
+        message("Got surface");
+
         var canvas = new Clutter.Canvas();
         var handler = canvas.draw.connect((cr) => {
+            message("Drawing canvas");
+            message("Setting source");
             cr.set_source_surface(surface, 0, 0);
+            message("Painting");
             cr.paint();
+            message("Drawing done");
             return false;
         });
+        message("Setting size");
         canvas.set_size(clip.width, clip.height);
         SignalHandler.disconnect(canvas, handler);
 
-        var snapshot = new Clutter.Actor();
+        Clutter.Actor snapshot = new Clutter.Actor();
+        message("Setting content");
         snapshot.content = canvas;
+        message("Content set");
 
         return snapshot;
     }
