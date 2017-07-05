@@ -851,17 +851,11 @@ public class BudgieWM : Meta.Plugin
         clip.height = frame_rect.height;
 
         message("Getting surface");
-        var surface = texture.get_image(clip);
-
-        if (surface == null) {
-            message("Surface was null");
-            return null;
-        }
-
+        Cairo.Surface surface = texture.get_image(clip);
         message("Got surface");
 
-        var canvas = new Clutter.Canvas();
-        var handler = canvas.draw.connect((cr) => {
+        Clutter.Canvas canvas = new Clutter.Canvas();
+        ulong handler = canvas.draw.connect((cr) => {
             message("Drawing canvas");
             message("Setting source");
             cr.set_source_surface(surface, 0, 0);
